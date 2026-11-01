@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import io
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -140,6 +142,55 @@ class CLITestCase(unittest.TestCase):
             self.assertEqual(code, 0)
             files = list(Path(td).glob("*.md"))
             self.assertEqual(len(files), 2)
+
+    def test_export_versioned(self) -> None:
+        self._run("save", "--name", "ev", "--content", "first", "--tag", "x")
+        self._run("save", "--name", "ev", "--content", "second", "--tag", "x")
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "v1.md"
+            code = self._run("export", "ev", "--version", "1", "--output", str(out))
+            self.assertEqual(code, 0)
+            text = out.read_text(encoding="utf-8")
+            self.assertIn("first", text)
+            self.assertNotIn("second", text)
+
+    def test_export_all_filtered(self) -> None:
+        self._run("save", "--name", "keep", "--content", "keep me")
+        self._run("save", "--name", "drop", "--content", "drop me")
+        with tempfile.TemporaryDirectory() as td:
+            code = self._run("export-all", "--name", "keep", "--output", td)
+            self.assertEqual(code, 0)
+            files = list(Path(td).glob("*.md"))
+            self.assertEqual(len(files), 1)
+            self.assertIn("keep", files[0].name)
+
+    def test_diff_content(self) -> None:
+        self._run("save", "--name", "dc", "--content", "alpha\nbeta\n")
+        self._run("save", "--name", "dc", "--content", "alpha\ngamma\n")
+        buf = io.StringIO()
+        old = sys.stdout
+        sys.stdout = buf
+        try:
+            code = self._run("diff", "dc", "--from", "1", "--to", "2")
+            output = buf.getvalue()
+        finally:
+            sys.stdout = old
+        self.assertEqual(code, 0)
+        self.assertIn("-beta", output)
+        self.assertIn("+gamma", output)
+
+    def test_tag_version(self) -> None:
+        self._run("save", "--name", "tv", "--content", "x")
+        self._run("save", "--name", "tv", "--content", "y")
+        code = self._run("tag", "tv", "--version", "1", "--add", "v1-only")
+        self.assertEqual(code, 0)
+
+    def test_db_after_subcommand(self) -> None:
+        # --db after the subcommand should work thanks to _extract_db
+        code = self._run("save", "--name", "dba", "--content", "z", "--db", self.db_path)
+        self.assertEqual(code, 0)
+        code = self._run("list", "--name", "dba", "--db", self.db_path)
+        self.assertEqual(code, 0)
 
     def test_version_flag(self) -> None:
         with self.assertRaises(SystemExit) as ctx:

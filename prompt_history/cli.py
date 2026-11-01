@@ -246,9 +246,36 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _extract_db(argv: list[str]) -> list[str]:
+    """Move any --db <path> / --db=<path> to the front so it works before or after the subcommand.
+
+    argparse only accepts top-level options before the subcommand. Beginners naturally type
+    --db after the command, so we normalize argv here.
+    """
+    db: str | None = None
+    out: list[str] = []
+    i = 0
+    while i < len(argv):
+        arg = argv[i]
+        if arg == "--db" and i + 1 < len(argv):
+            db = argv[i + 1]
+            i += 2
+        elif arg.startswith("--db="):
+            db = arg.split("=", 1)[1]
+            i += 1
+        else:
+            out.append(arg)
+            i += 1
+    if db is not None:
+        out = ["--db", db] + out
+    return out
+
+
 def main(argv: Sequence[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
     parser = build_parser()
-    args = parser.parse_args(argv)
+    args = parser.parse_args(_extract_db(list(argv)))
     return args.func(args)
 
 

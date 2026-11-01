@@ -1,18 +1,35 @@
 # prompt-history
 
-A local-first command-line tool to **save, tag, diff, search, and export prompt versions**.
-Built for Dylan Asdale and Asdale Dynamics, LLC — beginner-friendly AI tools, plain English,
-step by step, never condescending. All data stays on your machine in a local SQLite database.
-No API keys, no network calls, no accounts.
+A friendly, local-first command-line tool to **save, tag, diff, search, and export prompt versions**.
+
+Built for **Dylan Asdale** and **Asdale Dynamics, LLC** — beginner-friendly AI education, books,
+and practical tools, explained "like a friend would": plain English, step by step, never
+condescending. Dylan is a registered nurse turned AI author and founder of Asdale Dynamics, LLC
+(Indiana, formed October 2026). You can find his writing at
+[dylanasdale.github.io](https://dylanasdale.github.io) and in *The Massive AI Manual*.
+
+Everything stays on your computer. There are no API keys, no accounts, no network calls, and no
+cloud. Your prompts live in a simple SQLite file that you control.
 
 ## Who this is for
 
-Anyone working with AI prompts who wants a simple, versioned prompt library on their own
-computer: writers, educators, small-business owners, healthcare workers exploring AI
-(education only — never medical advice), and hobbyists tinkering with local LLMs, FFXIV,
-or chess prompts.
+Anyone who writes AI prompts and wants a simple version history on their own machine:
+
+- **Writers and authors** tracking prompt drafts for books, KDP publishing, or marketing
+- **Small-business owners** using AI for eBay/Amazon reselling, bookkeeping, or admin
+- **Healthcare workers** exploring AI for education (this tool is educational only — never
+  medical advice)
+- **Educators and students** learning prompt engineering and local AI
+- **Hobbyists** tinkering with local LLMs, FFXIV, chess, or any other prompt library
+
+If you've ever rewritten a prompt and wished you could see what changed, or go back to an
+earlier version, this tool is for you.
 
 ## Install
+
+You need Python 3.8 or newer. No external packages are required.
+
+### Option 1: Install the `prompt-history` command
 
 ```bash
 git clone https://github.com/asdaledynamics/prompt-history-cli
@@ -20,61 +37,60 @@ cd prompt-history-cli
 python3 -m pip install -e .
 ```
 
-This creates a `prompt-history` command on your `PATH`. You can also run it without
-installing:
+This puts a `prompt-history` command on your `PATH`.
+
+### Option 2: Run without installing
 
 ```bash
 python3 -m prompt_history --help
 ```
-
-Requires Python 3.8+. No external packages are needed.
 
 ## Quick start
 
 Save your first prompt:
 
 ```bash
-prompt-history save --name "email-draft" --content "Write a friendly onboarding email" --tag onboarding --tag email
+prompt-history save --name "welcome-email" --content "Write a friendly welcome email" --tag onboarding --tag email
 ```
 
-Save a new version later:
+Save a revised version later (versions are grouped by name automatically):
 
 ```bash
-prompt-history save --name "email-draft" --content "Write a warm, concise onboarding email for new users" --tag onboarding --tag email --tag v2
+prompt-history save --name "welcome-email" --content "Write a warm, concise welcome email for new users" --tag onboarding --tag email --tag v2
 ```
 
-List your prompts:
+See what you've saved:
 
 ```bash
 prompt-history list
-prompt-history list --name "email-draft"
+prompt-history list --name "welcome-email"
 ```
 
-Show the latest version:
+Show the latest version of a prompt:
 
 ```bash
-prompt-history show email-draft
+prompt-history show welcome-email
 ```
 
 Show a specific version:
 
 ```bash
-prompt-history show email-draft --version 1
+prompt-history show welcome-email --version 1
 ```
 
-Diff two versions:
+See exactly what changed between two versions:
 
 ```bash
-prompt-history diff email-draft --from 1 --to 2
+prompt-history diff welcome-email --from 1 --to 2
 ```
 
-Add or remove tags:
+Add or remove tags on a version:
 
 ```bash
-prompt-history tag email-draft --version 2 --add priority-high --remove draft
+prompt-history tag welcome-email --version 2 --add priority-high --remove draft
 ```
 
-Search your prompt library:
+Search your whole prompt library by name, content, or tags:
 
 ```bash
 prompt-history search onboarding
@@ -83,35 +99,45 @@ prompt-history search onboarding
 Export a version to Markdown:
 
 ```bash
-prompt-history export email-draft --output email-draft.md
+prompt-history export welcome-email --output welcome-email.md
 ```
 
-Export everything (or a filtered set) to a folder of Markdown files:
+Export all your prompts (or just the ones matching a name) to Markdown files in a folder:
 
 ```bash
 prompt-history export-all --output ./prompt-exports
+prompt-history export-all --name "welcome-email" --output ./welcome-exports
 ```
 
-## Where data lives
+## Where your data lives
 
-By default prompts are stored in `~/.prompt_history/prompts.db` (a plain SQLite file).
-Use `--db /path/to/db.sqlite` to keep the database wherever you like — in a project folder,
-on a synced drive, or backed up however you prefer. Nothing leaves your machine.
+By default, prompts are stored in `~/.prompt_history/prompts.db` — an ordinary SQLite file on
+your machine. You can put it somewhere else with the `--db` option:
 
-## Commands
+```bash
+prompt-history --db ./my-project/prompts.db save --name "project-prompt" --content "..."
+```
 
-| Command | Purpose |
-|---------|---------|
+The `--db` option can go before or after the subcommand — whichever reads more naturally to
+you.
+
+Because everything is local, you can back up, move, or sync that `.db` file however you like.
+Nothing is sent anywhere.
+
+## Commands at a glance
+
+| Command | What it does |
+|---------|--------------|
 | `save` | Save a new prompt version (`--name`, `--content` or `--file`, `--tag`) |
 | `list` | List saved prompt versions (`--name` to filter) |
-| `show` | Show a prompt version (`--version` for a specific one, `--raw` for content only) |
-| `diff` | Show a unified diff between two versions (`--from`, `--to`) |
+| `show` | Show a prompt version (`--version N` for a specific one, `--raw` for content only) |
+| `diff` | Show a line-by-line diff between two versions (`--from`, `--to`) |
 | `search` | Search name, content, and tags |
 | `tag` | Add (`--add`) or remove (`--remove`) tags on a version |
 | `export` | Export one version to a Markdown file (`--output`) |
-| `export-all` | Export versions to Markdown files in a directory (`--output`) |
+| `export-all` | Export versions to Markdown files in a folder (`--output`) |
 
-## Testing
+## Test it
 
 ```bash
 python3 -m unittest discover -s tests
@@ -119,9 +145,8 @@ python3 -m unittest discover -s tests
 
 ## Credits & license
 
-Created for **Asdale Dynamics, LLC** (Indiana, formed October 2026) — beginner-friendly AI
-education, books, and practical open-source tools. Find Dylan Asdale's writing at
-[dylanasdale.github.io](https://dylanasdale.github.io) and *The Massive AI Manual*.
+Created for **Asdale Dynamics, LLC** — beginner-friendly AI education, books, guides, and
+practical open-source tools the LLC can publish or sell.
 
 Licensed under the MIT License. See [LICENSE](LICENSE).
 
